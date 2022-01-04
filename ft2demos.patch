@@ -1,0 +1,86 @@
+diff --git a/print/ft2demos/Makefile b/print/ft2demos/Makefile
+index cc07936c3d94..02a411654dca 100644
+--- a/print/ft2demos/Makefile
++++ b/print/ft2demos/Makefile
+@@ -1,10 +1,10 @@
+ # Created by: KANOU Hiroki <kanou@khdd.net>
+ 
+ PORTNAME=	ft2demos
+-PORTVERSION=	2.10.4
++PORTVERSION=	2.11.1
+ CATEGORIES=	print
+-MASTER_SITES=	SAVANNAH/freetype/ \
+-		SF/freetype/freetype-demos/${PORTVERSION}
++
++MASTER_SITES=https://gitlab.freedesktop.org
+ 
+ MAINTAINER=	ports@FreeBSD.org
+ COMMENT=	Demo programs for FreeType2
+@@ -12,16 +12,20 @@ COMMENT=	Demo programs for FreeType2
+ LICENSE=	BSD3CLAUSE GPLv2
+ LICENSE_COMB=	dual
+ 
+-BROKEN=		Doesn't build with FreeType 2.11.0
+-
+ BUILD_DEPENDS=	${NONEXISTENT}:print/freetype2:build
+ LIB_DEPENDS=	libfreetype.so:print/freetype2 \
+ 		libpng.so:graphics/png
+ 
+-USES=		gmake tar:xz xorg
+-USE_XORG=	x11
++USES= tar:xz xorg
++USE_XORG= x11
+ 
+-MAKE_ARGS=	EXES="${FT_PROGRAMS}" X11_PATH="${LOCALBASE}"
++USE_GITLAB= yes
++GL_PROJECT=freetype-demos
++GL_ACCOUNT=freetype
++GL_COMMIT=07027905d9a47664251b3ee362c5cfad1cddf86f
++
++USES=		meson tar:xz xorg
++USE_XORG=	x11
+ 
+ PLIST_FILES=	${FT_PROGRAMS:S,^,bin/,}
+ 
+@@ -29,10 +33,11 @@ FT_PROGRAMS=	ftbench ftchkwd ftdiff ftdump ftgamma ftgrid ftlint ftmemchk \
+ 		ftmulti ftpatchk ftstring fttimer ftvalid ftview
+ 
+ post-extract:
+-	${LN} -sf `${MAKE} -C ${.CURDIR}/../../print/freetype2 -V WRKSRC` ${WRKDIR}/freetype2
++	${LN} -sf `${MAKE} -C ${.CURDIR}/../../print/freetype2 -V WRKSRC` \
++	${WRKDIR}/${GL_PROJECT}-${GL_COMMIT}/subprojects/freetype2
+ 
+ do-install:
+-	@(cd ${WRKSRC}/bin/.libs && \
++	@(cd ${WRKSRC}/_build && \
+ 		${INSTALL_PROGRAM} ${FT_PROGRAMS} ${STAGEDIR}${PREFIX}/bin)
+ 
+ .include <bsd.port.mk>
+diff --git a/print/ft2demos/distinfo b/print/ft2demos/distinfo
+index d2b1796799fb..1f573d4c8c9c 100644
+--- a/print/ft2demos/distinfo
++++ b/print/ft2demos/distinfo
+@@ -1,3 +1,3 @@
+-TIMESTAMP = 1603568666
+-SHA256 (ft2demos-2.10.4.tar.xz) = 3f873ebe4fb387da3859149459f9be95320ce1fd56b50f8fdb9d2a8492887083
+-SIZE (ft2demos-2.10.4.tar.xz) = 236712
++TIMESTAMP = 1641293484
++SHA256 (freetype-freetype-demos-07027905d9a47664251b3ee362c5cfad1cddf86f_GL0.tar.gz) = 61c872dde5aa69fc0a27019950c301cd3db7f11a776e4eb9859311d2fc0d3d5e
++SIZE (freetype-freetype-demos-07027905d9a47664251b3ee362c5cfad1cddf86f_GL0.tar.gz) = 342190
+diff --git a/print/ft2demos/files/patch-meson.build b/print/ft2demos/files/patch-meson.build
+new file mode 100644
+index 000000000000..69d0d5831227
+--- /dev/null
++++ b/print/ft2demos/files/patch-meson.build
+@@ -0,0 +1,11 @@
++--- meson.build.orig	2021-12-02 03:37:39.000000000 -0900
+++++ meson.build	2022-01-04 02:25:43.961204000 -0900
++@@ -112,7 +112,7 @@
++ 
++ executable('ftgrid',
++   'src/ftgrid.c',
++-  dependencies: libfreetype2_dep,
+++  dependencies: [libfreetype2_dep, math_dep],
++   include_directories: graph_include_dir,
++   link_with: [ftcommon_lib, output_lib],
++   install: true)
